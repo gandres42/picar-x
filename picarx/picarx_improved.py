@@ -16,7 +16,7 @@ def constrain(x, min_val, max_val):
     return max(min_val, min(max_val, x))
 
 class Picarx(object):
-    CONFIG = '/opt/picar-x/picar-x.conf'
+    CONFIG = './picar-x.conf'
 
     DEFAULT_LINE_REF = [1000, 1000, 1000]
     DEFAULT_CLIFF_REF = [500, 500, 500]
@@ -66,6 +66,7 @@ class Picarx(object):
         self.cam_tilt.angle(self.cam_tilt_cali_val)
 
         # --------- motors init ---------
+        print(motor_pins)
         self.left_rear_dir_pin = Pin(motor_pins[0])
         self.right_rear_dir_pin = Pin(motor_pins[1])
         self.left_rear_pwm_pin = PWM(motor_pins[2])
@@ -74,7 +75,7 @@ class Picarx(object):
         self.motor_speed_pins = [self.left_rear_pwm_pin, self.right_rear_pwm_pin]
         # get calibration values
         self.cali_dir_value = self.config_flie.get("picarx_dir_motor", default_value="[1, 1]")
-        self.cali_dir_value = [int(i.strip()) for i in self.cali_dir_value.strip().strip("[]").split(",")]
+        # self.cali_dir_value = [int(i.strip()) for i in self.cali_dir_value.strip().strip("[]").split(",")]
         self.cali_speed_value = [0, 0]
         self.dir_current_angle = 0
         # init pwm
@@ -87,11 +88,11 @@ class Picarx(object):
         self.grayscale = Grayscale_Module(adc0, adc1, adc2, reference=None)
         # get reference
         self.line_reference = self.config_flie.get("line_reference", default_value=str(self.DEFAULT_LINE_REF))
-        self.line_reference = [float(i) for i in self.line_reference.strip().strip('[]').split(',')]
+        # self.line_reference = [float(i) for i in self.line_reference.strip().strip('[]').split(',')]
         self.cliff_reference = self.config_flie.get("cliff_reference", default_value=str(self.DEFAULT_CLIFF_REF))
-        self.cliff_reference = [float(i) for i in self.cliff_reference.strip().strip('[]').split(',')]
+        # self.cliff_reference = [float(i) for i in self.cliff_reference.strip().strip('[]').split(',')]
         # transfer reference
-        self.grayscale.reference(self.line_reference)
+        # self.grayscale.reference(self.line_reference)
 
         # --------- ultrasonic init ---------
         trig, echo= ultrasonic_pins
@@ -107,21 +108,21 @@ class Picarx(object):
         '''
         speed = constrain(speed, -100, 100)
         motor -= 1
-        if speed >= 0:
-            direction = 1 * self.cali_dir_value[motor]
-        elif speed < 0:
-            direction = -1 * self.cali_dir_value[motor]
-        speed = abs(speed)
+        # if speed >= 0:
+        #     direction = 1 * self.cali_dir_value[motor]
+        # elif speed < 0:
+        #     direction = -1 * self.cali_dir_value[motor]
+        # speed = abs(speed)
         # print(f"direction: {direction}, speed: {speed}")
         if speed != 0:
             speed = int(speed /2 ) + 50
         speed = speed - self.cali_speed_value[motor]
-        if direction < 0:
-            self.motor_direction_pins[motor].high()
-            self.motor_speed_pins[motor].pulse_width_percent(speed)
-        else:
-            self.motor_direction_pins[motor].low()
-            self.motor_speed_pins[motor].pulse_width_percent(speed)
+        # if direction < 0:
+        #     self.motor_direction_pins[motor].high()
+        #     self.motor_speed_pins[motor].pulse_width_percent(speed)
+        # else:
+        #     self.motor_direction_pins[motor].low()
+        #     self.motor_speed_pins[motor].pulse_width_percent(speed)
 
     def motor_speed_calibration(self, value):
         self.cali_speed_value = value
