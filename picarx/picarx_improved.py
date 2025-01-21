@@ -4,7 +4,7 @@ import time
 import os
 import atexit
 import math
-
+import logging
 
 def constrain(x, min_val, max_val):
     '''
@@ -94,6 +94,9 @@ class Picarx(object):
         trig, echo= ultrasonic_pins
         self.ultrasonic = Ultrasonic(Pin(trig), Pin(echo, mode=Pin.IN, pull=Pin.PULL_DOWN))
         
+        # ------------ logging --------------
+        self.logger = logging.getLogger(__name__)
+        
     def set_motor_speed(self, motor, speed):
         ''' set motor speed
         
@@ -119,6 +122,7 @@ class Picarx(object):
         else:
             self.motor_direction_pins[motor].low()
             self.motor_speed_pins[motor].pulse_width_percent(speed)
+        self.logger.debug(f'set motor {motor} to {speed}%')
 
     def motor_speed_calibration(self, value):
         self.cali_speed_value = value
