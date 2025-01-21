@@ -97,6 +97,8 @@ class Picarx(object):
         # ------------ logging --------------
         self.logger = logging.getLogger(__name__)
         
+        time.sleep(.5)
+        
     def set_motor_speed(self, motor, speed):
         ''' set motor speed
         
