@@ -3,13 +3,6 @@ from robot_hat import Grayscale_Module, Ultrasonic, utils
 import time
 import os
 
-
-def constrain(x, min_val, max_val):
-    '''
-    Constrains value to be within a range.
-    '''
-    return max(min_val, min(max_val, x))
-
 class Picarx(object):
     CONFIG = '/opt/picar-x/picar-x.conf'
 
@@ -92,6 +85,12 @@ class Picarx(object):
         trig, echo= ultrasonic_pins
         self.ultrasonic = Ultrasonic(Pin(trig), Pin(echo, mode=Pin.IN, pull=Pin.PULL_DOWN))
         
+    def constrain(x, min_val, max_val):
+        '''
+        Constrains value to be within a range.
+        '''
+        return max(min_val, min(max_val, x))
+        
     def set_motor_speed(self, motor, speed):
         ''' set motor speed
         
@@ -100,7 +99,7 @@ class Picarx(object):
         param speed: speed
         type speed: int      
         '''
-        speed = constrain(speed, -100, 100)
+        speed = self.constrain(speed, -100, 100)
         motor -= 1
         if speed >= 0:
             direction = 1 * self.cali_dir_value[motor]
@@ -148,7 +147,7 @@ class Picarx(object):
         self.dir_servo_pin.angle(value)
 
     def set_dir_servo_angle(self, value):
-        self.dir_current_angle = constrain(value, self.DIR_MIN, self.DIR_MAX)
+        self.dir_current_angle = self.constrain(value, self.DIR_MIN, self.DIR_MAX)
         angle_value  = self.dir_current_angle + self.dir_cali_val
         self.dir_servo_pin.angle(angle_value)
 
@@ -163,11 +162,11 @@ class Picarx(object):
         self.cam_tilt.angle(value)
 
     def set_cam_pan_angle(self, value):
-        value = constrain(value, self.CAM_PAN_MIN, self.CAM_PAN_MAX)
+        value = self.constrain(value, self.CAM_PAN_MIN, self.CAM_PAN_MAX)
         self.cam_pan.angle(-1*(value + -1*self.cam_pan_cali_val))
 
     def set_cam_tilt_angle(self,value):
-        value = constrain(value, self.CAM_TILT_MIN, self.CAM_TILT_MAX)
+        value = self.constrain(value, self.CAM_TILT_MIN, self.CAM_TILT_MAX)
         self.cam_tilt.angle(-1*(value + -1*self.cam_tilt_cali_val))
 
     def set_power(self, speed):
@@ -255,14 +254,3 @@ class Picarx(object):
         self.set_dir_servo_angle(0)
         self.set_cam_tilt_angle(0)
         self.set_cam_pan_angle(0)
-
-if __name__ == "__main__":
-    px = Picarx()
-    
-    @atexit.register
-    def goodbye():
-        px.stop()
-    
-    px.forward(50)
-    time.sleep(1)
-    px.stop()
