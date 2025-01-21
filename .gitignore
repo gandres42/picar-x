@@ -1,4 +1,8 @@
 .vscode/*
 build/*
 bk/
+<<<<<<< HEAD
 
+=======
+__pycache__
+>>>>>>> 4be21b1712e3c2ab1c1676f8f2c958095e5085ab
