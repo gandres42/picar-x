@@ -4,7 +4,7 @@ import time
 import os
 
 class Picarx(object):
-    CONFIG = '/opt/picar-x/picar-x.conf'
+    CONFIG = f'/home/{os.getlogin()}/.config/picarx'
 
     DEFAULT_LINE_REF = [1000, 1000, 1000]
     DEFAULT_CLIFF_REF = [500, 500, 500]
@@ -19,35 +19,31 @@ class Picarx(object):
     PERIOD = 4095
     PRESCALER = 10
     TIMEOUT = 0.02
-
-    # servo_pins: camera_pan_servo, camera_tilt_servo, direction_servo
-    # motor_pins: left_swicth, right_swicth, left_pwm, right_pwm
-    # grayscale_pins: 3 adc channels
-    # ultrasonic_pins: trig, echo2
-    # config: path of config file
+    
     def __init__(self, 
-                servo_pins:list=['P0', 'P1', 'P2'], 
-                motor_pins:list=['D4', 'D5', 'P13', 'P12'],
-                grayscale_pins:list=['A0', 'A1', 'A2'],
-                ultrasonic_pins:list=['D2','D3'],
-                config:str=CONFIG,
-                ):
+            servo_pins:list=['P0', 'P1', 'P2'], 
+            motor_pins:list=['D4', 'D5', 'P13', 'P12'],
+            grayscale_pins:list=['A0', 'A1', 'A2'],
+            ultrasonic_pins:list=['D2','D3'],
+            config:str=CONFIG):
 
         # reset robot_hat
         utils.reset_mcu()
         time.sleep(0.2)
 
         # --------- config_flie ---------
-        self.config_flie = fileDB(config, 777, os.getlogin())
+        self.config_file = fileDB(config)
 
         # --------- servos init ---------
         self.cam_pan = Servo(servo_pins[0])
         self.cam_tilt = Servo(servo_pins[1])   
         self.dir_servo_pin = Servo(servo_pins[2])
+        
         # get calibration values
-        self.dir_cali_val = float(self.config_flie.get("picarx_dir_servo", default_value=0))
-        self.cam_pan_cali_val = float(self.config_flie.get("picarx_cam_pan_servo", default_value=0))
-        self.cam_tilt_cali_val = float(self.config_flie.get("picarx_cam_tilt_servo", default_value=0))
+        self.dir_cali_val = float(self.config_file.get("picarx_dir_servo", default_value=0)) # type: ignore
+        self.cam_pan_cali_val = float(self.config_file.get("picarx_cam_pan_servo", default_value=0)) # type: ignore
+        self.cam_tilt_cali_val = float(self.config_file.get("picarx_cam_tilt_servo", default_value=0)) # type: ignore
+        #
         # set servos to init angle
         self.dir_servo_pin.angle(self.dir_cali_val)
         self.cam_pan.angle(self.cam_pan_cali_val)
@@ -60,9 +56,9 @@ class Picarx(object):
         self.right_rear_pwm_pin = PWM(motor_pins[3])
         self.motor_direction_pins = [self.left_rear_dir_pin, self.right_rear_dir_pin]
         self.motor_speed_pins = [self.left_rear_pwm_pin, self.right_rear_pwm_pin]
+        
         # get calibration values
-        self.cali_dir_value = self.config_flie.get("picarx_dir_motor", default_value="[1, 1]")
-        self.cali_dir_value = [int(i.strip()) for i in self.cali_dir_value.strip().strip("[]").split(",")]
+        self.cali_dir_value = self.config_file.get("picarx_dir_motor", default_value=[1, 1])
         self.cali_speed_value = [0, 0]
         self.dir_current_angle = 0
         # init pwm
@@ -74,18 +70,16 @@ class Picarx(object):
         adc0, adc1, adc2 = [ADC(pin) for pin in grayscale_pins]
         self.grayscale = Grayscale_Module(adc0, adc1, adc2, reference=None)
         # get reference
-        self.line_reference = self.config_flie.get("line_reference", default_value=str(self.DEFAULT_LINE_REF))
-        self.line_reference = [float(i) for i in self.line_reference.strip().strip('[]').split(',')]
-        self.cliff_reference = self.config_flie.get("cliff_reference", default_value=str(self.DEFAULT_CLIFF_REF))
-        self.cliff_reference = [float(i) for i in self.cliff_reference.strip().strip('[]').split(',')]
+        self.line_reference = self.config_file.get("line_reference", default_value=str(self.DEFAULT_LINE_REF))
+        self.cliff_reference = self.config_file.get("cliff_reference", default_value=str(self.DEFAULT_CLIFF_REF))
         # transfer reference
-        self.grayscale.reference(self.line_reference)
+        self.grayscale.reference(self.line_reference) # type: ignore
 
         # --------- ultrasonic init ---------
         trig, echo= ultrasonic_pins
         self.ultrasonic = Ultrasonic(Pin(trig), Pin(echo, mode=Pin.IN, pull=Pin.PULL_DOWN))
         
-    def constrain(x, min_val, max_val):
+    def constrain(self, x, min_val, max_val):
         '''
         Constrains value to be within a range.
         '''
@@ -139,11 +133,11 @@ class Picarx(object):
             self.cali_dir_value[motor] = 1
         elif value == -1:
             self.cali_dir_value[motor] = -1
-        self.config_flie.set("picarx_dir_motor", self.cali_dir_value)
+        self.config_file.set("picarx_dir_motor", self.cali_dir_value)
 
     def dir_servo_calibrate(self, value):
         self.dir_cali_val = value
-        self.config_flie.set("picarx_dir_servo", "%s"%value)
+        self.config_file.set("picarx_dir_servo", "%s"%value)
         self.dir_servo_pin.angle(value)
 
     def set_dir_servo_angle(self, value):
@@ -153,12 +147,12 @@ class Picarx(object):
 
     def cam_pan_servo_calibrate(self, value):
         self.cam_pan_cali_val = value
-        self.config_flie.set("picarx_cam_pan_servo", "%s"%value)
+        self.config_file.set("picarx_cam_pan_servo", "%s"%value)
         self.cam_pan.angle(value)
 
     def cam_tilt_servo_calibrate(self, value):
         self.cam_tilt_cali_val = value
-        self.config_flie.set("picarx_cam_tilt_servo", "%s"%value)
+        self.config_file.set("picarx_cam_tilt_servo", "%s"%value)
         self.cam_tilt.angle(value)
 
     def set_cam_pan_angle(self, value):
@@ -223,7 +217,7 @@ class Picarx(object):
         if isinstance(value, list) and len(value) == 3:
             self.line_reference = value
             self.grayscale.reference(self.line_reference)
-            self.config_flie.set("line_reference", self.line_reference)
+            self.config_file.set("line_reference", self.line_reference)
         else:
             raise ValueError("grayscale reference must be a 1*3 list")
 
@@ -245,7 +239,7 @@ class Picarx(object):
     def set_cliff_reference(self, value):
         if isinstance(value, list) and len(value) == 3:
             self.cliff_reference = value
-            self.config_flie.set("cliff_reference", self.cliff_reference)
+            self.config_file.set("cliff_reference", self.cliff_reference)
         else:
             raise ValueError("grayscale reference must be a 1*3 list")
 
