@@ -2,6 +2,8 @@ from robot_hat import Pin, ADC, PWM, Servo, fileDB
 from robot_hat import Grayscale_Module, Ultrasonic, utils
 import time
 import os
+import atexit
+import math
 
 
 def constrain(x, min_val, max_val):
@@ -108,8 +110,8 @@ class Picarx(object):
             direction = -1 * self.cali_dir_value[motor]
         speed = abs(speed)
         # print(f"direction: {direction}, speed: {speed}")
-        if speed != 0:
-            speed = int(speed /2 ) + 50
+        # if speed != 0:
+        #     speed = int(speed /2 ) + 50
         speed = speed - self.cali_speed_value[motor]
         if direction < 0:
             self.motor_direction_pins[motor].high()
@@ -194,16 +196,22 @@ class Picarx(object):
     def forward(self, speed):
         current_angle = self.dir_current_angle
         if current_angle != 0:
-            abs_current_angle = abs(current_angle)
-            if abs_current_angle > self.DIR_MAX:
-                abs_current_angle = self.DIR_MAX
-            power_scale = (100 - abs_current_angle) / 100.0
-            if (current_angle / abs_current_angle) > 0:
-                self.set_motor_speed(1, 1*speed * power_scale)
-                self.set_motor_speed(2, -speed) 
-            else:
-                self.set_motor_speed(1, speed)
-                self.set_motor_speed(2, -1*speed * power_scale)
+            # abs_current_angle = abs(current_angle)
+            # if abs_current_angle > self.DIR_MAX:
+            #     abs_current_angle = self.DIR_MAX
+            # power_scale = (100 - abs_current_angle) / 100.0
+            # if (current_angle / abs_current_angle) > 0:
+            #     self.set_motor_speed(1, 1*speed * power_scale)
+            #     self.set_motor_speed(2, -speed) 
+            # else:
+            #     self.set_motor_speed(1, speed)
+            #     self.set_motor_speed(2, -1*speed * power_scale)
+            current_angle = math.radians(current_angle)
+            factor = (4 * current_angle) / (2 * 2.5)
+            v_L = speed * (1 + factor)
+            v_R = -speed * (1 - factor)
+            self.set_motor_speed(1, v_L)
+            self.set_motor_speed(2, v_R)
         else:
             self.set_motor_speed(1, speed)
             self.set_motor_speed(2, -1*speed)                  
@@ -256,6 +264,7 @@ class Picarx(object):
         self.set_cam_tilt_angle(0)
         self.set_cam_pan_angle(0)
 
+
 if __name__ == "__main__":
     px = Picarx()
     
@@ -263,6 +272,7 @@ if __name__ == "__main__":
     def goodbye():
         px.stop()
     
-    px.forward(50)
-    time.sleep(1)
+    px.set_dir_servo_angle(45)
+    px.forward(40)
+    time.sleep(5)
     px.stop()
