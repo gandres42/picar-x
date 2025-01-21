@@ -137,7 +137,7 @@ class Picarx(object):
 
     def dir_servo_calibrate(self, value):
         self.dir_cali_val = value
-        self.config_file.set("picarx_dir_servo", "%s"%value)
+        self.config_file.set("picarx_dir_servo", value)
         self.dir_servo_pin.angle(value)
 
     def set_dir_servo_angle(self, value):
@@ -147,12 +147,12 @@ class Picarx(object):
 
     def cam_pan_servo_calibrate(self, value):
         self.cam_pan_cali_val = value
-        self.config_file.set("picarx_cam_pan_servo", "%s"%value)
+        self.config_file.set("picarx_cam_pan_servo", value)
         self.cam_pan.angle(value)
 
     def cam_tilt_servo_calibrate(self, value):
         self.cam_tilt_cali_val = value
-        self.config_file.set("picarx_cam_tilt_servo", "%s"%value)
+        self.config_file.set("picarx_cam_tilt_servo", value)
         self.cam_tilt.angle(value)
 
     def set_cam_pan_angle(self, value):
