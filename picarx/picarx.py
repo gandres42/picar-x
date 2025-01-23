@@ -59,8 +59,7 @@ class Picarx(object):
         self.motor_speed_pins = [self.left_rear_pwm_pin, self.right_rear_pwm_pin]
         
         # get calibration values
-        self.cali_dir_value = self.config_file.get("picarx_dir_motor", default_value="[1, 1]")
-        self.cali_dir_value = [int(i.strip()) for i in self.cali_dir_value.strip().strip("[]").split(",")] # type: ignore
+        self.cali_dir_value = self.config_file.get("picarx_dir_motor", default_value=[1, 1])
         self.cali_speed_value = [0, 0]
         self.dir_current_angle = 0
         # init pwm
@@ -72,11 +71,9 @@ class Picarx(object):
         adc0, adc1, adc2 = [ADC(pin) for pin in grayscale_pins]
         self.grayscale = Grayscale_Module(adc0, adc1, adc2, reference=None)
         # get reference
-        self.line_reference = self.config_file.get("line_reference", default_value=str(self.DEFAULT_LINE_REF))
-        self.line_reference = [float(i) for i in self.line_reference.strip().strip('[]').split(',')]
+        self.line_reference = self.config_file.get("line_reference", default_value=self.DEFAULT_LINE_REF)
         
-        self.cliff_reference = self.config_file.get("cliff_reference", default_value=str(self.DEFAULT_CLIFF_REF))
-        self.cliff_reference = [float(i) for i in self.cliff_reference.strip().strip('[]').split(',')]
+        self.cliff_reference = self.config_file.get("cliff_reference", default_value=self.DEFAULT_CLIFF_REF)
         # transfer reference
         
         self.grayscale.reference(self.line_reference)
