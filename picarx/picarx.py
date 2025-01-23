@@ -2,6 +2,7 @@ from robot_hat import Pin, ADC, PWM, Servo, fileDB
 from robot_hat import Grayscale_Module, Ultrasonic, utils
 import time
 import os
+import atexit
 
 class Picarx(object):
     CONFIG = f'/home/{os.getlogin()}/.config/picarx/config.json'
@@ -83,6 +84,10 @@ class Picarx(object):
         # --------- ultrasonic init ---------
         trig, echo= ultrasonic_pins
         self.ultrasonic = Ultrasonic(Pin(trig), Pin(echo, mode=Pin.IN, pull=Pin.PULL_DOWN))
+        
+        @atexit.register
+        def goodbye():
+            self.stop()
         
     def constrain(self, x, min_val, max_val):
         '''
