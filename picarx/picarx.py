@@ -4,7 +4,7 @@ import time
 import os
 
 class Picarx(object):
-    CONFIG = f'/home/{os.getlogin()}/.config/picarx'
+    CONFIG = f'/home/{os.getlogin()}/.config/picarx/config.json'
 
     DEFAULT_LINE_REF = [1000, 1000, 1000]
     DEFAULT_CLIFF_REF = [500, 500, 500]
@@ -58,7 +58,8 @@ class Picarx(object):
         self.motor_speed_pins = [self.left_rear_pwm_pin, self.right_rear_pwm_pin]
         
         # get calibration values
-        self.cali_dir_value = self.config_file.get("picarx_dir_motor", default_value=[1, 1])
+        self.cali_dir_value = self.config_file.get("picarx_dir_motor", default_value="[1, 1]")
+        self.cali_dir_value = [int(i.strip()) for i in self.cali_dir_value.strip().strip("[]").split(",")] # type: ignore
         self.cali_speed_value = [0, 0]
         self.dir_current_angle = 0
         # init pwm
@@ -71,9 +72,13 @@ class Picarx(object):
         self.grayscale = Grayscale_Module(adc0, adc1, adc2, reference=None)
         # get reference
         self.line_reference = self.config_file.get("line_reference", default_value=str(self.DEFAULT_LINE_REF))
+        self.line_reference = [float(i) for i in self.line_reference.strip().strip('[]').split(',')]
+        
         self.cliff_reference = self.config_file.get("cliff_reference", default_value=str(self.DEFAULT_CLIFF_REF))
+        self.cliff_reference = [float(i) for i in self.cliff_reference.strip().strip('[]').split(',')]
         # transfer reference
-        self.grayscale.reference(self.line_reference) # type: ignore
+        
+        self.grayscale.reference(self.line_reference)
 
         # --------- ultrasonic init ---------
         trig, echo= ultrasonic_pins
@@ -137,7 +142,7 @@ class Picarx(object):
 
     def dir_servo_calibrate(self, value):
         self.dir_cali_val = value
-        self.config_file.set("picarx_dir_servo", value)
+        self.config_file.set("picarx_dir_servo", "%s"%value)
         self.dir_servo_pin.angle(value)
 
     def set_dir_servo_angle(self, value):
@@ -147,12 +152,12 @@ class Picarx(object):
 
     def cam_pan_servo_calibrate(self, value):
         self.cam_pan_cali_val = value
-        self.config_file.set("picarx_cam_pan_servo", value)
+        self.config_file.set("picarx_cam_pan_servo", "%s"%value)
         self.cam_pan.angle(value)
 
     def cam_tilt_servo_calibrate(self, value):
         self.cam_tilt_cali_val = value
-        self.config_file.set("picarx_cam_tilt_servo", value)
+        self.config_file.set("picarx_cam_tilt_servo", "%s"%value)
         self.cam_tilt.angle(value)
 
     def set_cam_pan_angle(self, value):

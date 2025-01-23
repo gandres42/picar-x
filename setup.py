@@ -21,6 +21,7 @@ setuptools.setup(
         "Topic :: System :: Hardware :: Hardware Drivers"
     ],
     install_requires=[
-        "spidev >= 3.2"
+        "spidev >= 3.2",
+        "readchar"
     ]
 )
