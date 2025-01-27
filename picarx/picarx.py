@@ -102,21 +102,13 @@ class Picarx(object):
         '''
         speed = self.constrain(speed, -100, 100)
         motor -= 1
-        if speed >= 0:
-            direction = 1 * self.cali_dir_value[motor]
-        elif speed < 0:
-            direction = -1 * self.cali_dir_value[motor]
-        speed = abs(speed)
-        # print(f"direction: {direction}, speed: {speed}")
-        if speed != 0:
-            speed = int(speed /2 ) + 50
-        speed = speed - self.cali_speed_value[motor]
-        if direction < 0:
+        abs_speed = int(abs(speed)) + 20
+        if speed < 0:
             self.motor_direction_pins[motor].high()
-            self.motor_speed_pins[motor].pulse_width_percent(speed)
+            self.motor_speed_pins[motor].pulse_width_percent(abs_speed)
         else:
             self.motor_direction_pins[motor].low()
-            self.motor_speed_pins[motor].pulse_width_percent(speed)
+            self.motor_speed_pins[motor].pulse_width_percent(abs_speed)
 
     def motor_speed_calibration(self, value):
         self.cali_speed_value = value
